@@ -8,6 +8,18 @@ const DonorProfileSchema = new mongoose.Schema({
         city : { type : String, required : true, index : true },
         pincode: {type : String, required : true}
     },
+       // GeoJSON point — required for $near / $geoWithin queries in geoService.js
+    geoLocation: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number], // [longitude, latitude]
+            required: true
+        }
+    },
     contact_no : { type : String , required : true, match: [/^[0-9]{10}$/, 'Invalid phone number']},
     last_donation : { type : Date, default : null },
     is_available : {type : Boolean, default: true}
@@ -15,10 +27,11 @@ const DonorProfileSchema = new mongoose.Schema({
    timestamps: true 
 });
 
-module.exports = mongoose.model('DonorProfile', DonorProfileSchema );
 // 2dsphere index — REQUIRED for geospatial queries to work
 DonorProfileSchema.index({ geoLocation: '2dsphere' });
 
 // Compound index — speeds up the most common query:
 // "find available donors of blood type X near location Y"
 DonorProfileSchema.index({ blood_group: 1, is_available: 1, geoLocation: '2dsphere' });
+
+module.exports = mongoose.model('DonorProfile', DonorProfileSchema );
