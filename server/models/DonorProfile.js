@@ -16,3 +16,9 @@ const DonorProfileSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('DonorProfile', DonorProfileSchema );
+// 2dsphere index — REQUIRED for geospatial queries to work
+DonorProfileSchema.index({ geoLocation: '2dsphere' });
+
+// Compound index — speeds up the most common query:
+// "find available donors of blood type X near location Y"
+DonorProfileSchema.index({ blood_group: 1, is_available: 1, geoLocation: '2dsphere' });
