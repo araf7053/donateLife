@@ -107,3 +107,15 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error during login" });
   }
 };
+
+
+// GET CURRENT USER
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password_hash');
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error('GetMe error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
