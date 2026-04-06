@@ -1,0 +1,643 @@
+openapi: 3.0.0
+info:
+  title: DonateLife API
+  description: Blood Donation Management System REST API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5000/api
+    description: Development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [donor, requester, admin]
+
+    DonorProfile:
+      type: object
+      properties:
+        blood_group:
+          type: string
+          enum: [A+, A-, B+, B-, AB+, AB-, O+, O-]
+        location:
+          type: object
+          properties:
+            city:
+              type: string
+            pincode:
+              type: string
+        contact_no:
+          type: string
+        is_available:
+          type: boolean
+        last_donation:
+          type: string
+          format: date
+
+    BloodRequest:
+      type: object
+      properties:
+        patient_name:
+          type: string
+        blood_group:
+          type: string
+          enum: [A+, A-, B+, B-, AB+, AB-, O+, O-]
+        units_needed:
+          type: number
+        location:
+          type: object
+          properties:
+            city:
+              type: string
+            hospital:
+              type: string
+        urgency:
+          type: string
+          enum: [Normal, Critical]
+        status:
+          type: string
+          enum: [Pending, Fulfilled, Cancelled]
+
+    Donation:
+      type: object
+      properties:
+        request_id:
+          type: string
+          description: Reference to BloodRequest
+        donor_id:
+          type: string
+          description: Reference to DonorProfile
+        donation_date:
+          type: string
+          format: date
+          example: "2026-04-05"
+        units_given:
+          type: number
+          example: 1
+        remarks:
+          type: string
+          example: Happy to help
+
+    Notification:
+      type: object
+      properties:
+        message:
+          type: string
+        type:
+          type: string
+          enum: [In-App, E-mail, SMS]
+        is_read:
+          type: boolean
+
+paths:
+  # ─── AUTH ──────────────────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:
+                  type: string
+                  example: Araf Ahmed
+                email:
+                  type: string
+                  example: araf@test.com
+                password:
+                  type: string
+                  example: "123456"
+                role:
+                  type: string
+                  enum: [donor, requester, admin]
+                  example: donor
+      responses:
+        "201":
+          description: User registered successfully
+        "409":
+          description: Email already registered
+        "400":
+          description: Validation error
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  example: araf@test.com
+                password:
+                  type: string
+                  example: "123456"
+      responses:
+        "200":
+          description: Login successful with token
+        "401":
+          description: Invalid credentials
+        "403":
+          description: Account deactivated
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current logged in user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user data
+        "401":
+          description: Not authenticated
+
+  # ─── DONORS ────────────────────────────────────────────────────────────────
+  /donors/profile:
+    post:
+      tags: [Donors]
+      summary: Create donor profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [blood_group, city, pincode, contact_no]
+              properties:
+                blood_group:
+                  type: string
+                  example: A+
+                city:
+                  type: string
+                  example: Dhaka
+                pincode:
+                  type: string
+                  example: "1207"
+                contact_no:
+                  type: string
+                  example: "01712345678"
+      responses:
+        "201":
+          description: Donor profile created
+        "409":
+          description: Profile already exists
+
+    get:
+      tags: [Donors]
+      summary: Get my donor profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Donor profile data
+        "404":
+          description: Profile not found
+
+    put:
+      tags: [Donors]
+      summary: Update donor profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                blood_group:
+                  type: string
+                city:
+                  type: string
+                pincode:
+                  type: string
+                contact_no:
+                  type: string
+                is_available:
+                  type: boolean
+      responses:
+        "200":
+          description: Profile updated successfully
+
+  /donors/search:
+    get:
+      tags: [Donors]
+      summary: Search nearby eligible donors
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: city
+          required: true
+          schema:
+            type: string
+          example: Dhaka
+        - in: query
+          name: blood_group
+          schema:
+            type: string
+          example: A+
+        - in: query
+          name: maxDistance
+          schema:
+            type: number
+          example: 10
+      responses:
+        "200":
+          description: List of nearby eligible donors
+
+  /donors/eligibility:
+    get:
+      tags: [Donors]
+      summary: Check donor eligibility
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Eligibility status with days remaining if not eligible
+
+  # ─── BLOOD REQUESTS ────────────────────────────────────────────────────────
+  /requests:
+    post:
+      tags: [Blood Requests]
+      summary: Create a blood request
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [patient_name, blood_group, units_needed, city]
+              properties:
+                patient_name:
+                  type: string
+                  example: John Doe
+                blood_group:
+                  type: string
+                  example: A+
+                units_needed:
+                  type: number
+                  example: 2
+                city:
+                  type: string
+                  example: Dhaka
+                hospital:
+                  type: string
+                  example: Dhaka Medical
+                urgency:
+                  type: string
+                  enum: [Normal, Critical]
+                  example: Critical
+      responses:
+        "201":
+          description: Blood request created and donors notified
+
+    get:
+      tags: [Blood Requests]
+      summary: Get all blood requests
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: blood_group
+          schema:
+            type: string
+        - in: query
+          name: city
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [Pending, Fulfilled, Cancelled]
+        - in: query
+          name: urgency
+          schema:
+            type: string
+            enum: [Normal, Critical]
+      responses:
+        "200":
+          description: List of blood requests
+
+  /requests/my:
+    get:
+      tags: [Blood Requests]
+      summary: Get my blood requests
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of my blood requests
+
+  /requests/{id}:
+    get:
+      tags: [Blood Requests]
+      summary: Get single blood request
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Blood request data
+        "404":
+          description: Not found
+
+  /requests/{id}/status:
+    patch:
+      tags: [Blood Requests]
+      summary: Update blood request status
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [Pending, Fulfilled, Cancelled]
+      responses:
+        "200":
+          description: Status updated
+        "403":
+          description: Not authorized
+
+  # ─── DONATIONS ─────────────────────────────────────────────────────────────
+  /donations:
+    post:
+      tags: [Donations]
+      summary: Record a donation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [request_id, units_given]
+              properties:
+                request_id:
+                  type: string
+                units_given:
+                  type: number
+                  example: 1
+                remarks:
+                  type: string
+                  example: Happy to help
+      responses:
+        "201":
+          description: Donation recorded successfully
+        "400":
+          description: Not eligible or request not pending
+
+    get:
+      tags: [Donations]
+      summary: Get all donations (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of all donations
+
+  /donations/my:
+    get:
+      tags: [Donations]
+      summary: Get my donation history
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: My donation history
+
+  /donations/request/{id}:
+    get:
+      tags: [Donations]
+      summary: Get donations for a specific request
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Donations for this request
+
+  # ─── NOTIFICATIONS ─────────────────────────────────────────────────────────
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Get my notifications
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of my notifications
+
+    delete:
+      tags: [Notifications]
+      summary: Delete all my notifications
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: All notifications deleted
+
+  /notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Get unread notification count
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Unread count for badge display
+
+  /notifications/{id}/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark a notification as read
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Notification marked as read
+
+  /notifications/read-all:
+    patch:
+      tags: [Notifications]
+      summary: Mark all notifications as read
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: All notifications marked as read
+
+  /notifications/{id}:
+    delete:
+      tags: [Notifications]
+      summary: Delete a notification
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Notification deleted
+
+  # ─── ADMIN ─────────────────────────────────────────────────────────────────
+  /admin/stats:
+    get:
+      tags: [Admin]
+      summary: Get dashboard statistics
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Total counts, blood group distribution and monthly donations
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: Get all users
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [donor, requester, admin]
+        - in: query
+          name: is_active
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of all users
+
+  /admin/users/{id}:
+    get:
+      tags: [Admin]
+      summary: Get single user with donor profile
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User data with donor profile
+        "404":
+          description: User not found
+
+    delete:
+      tags: [Admin]
+      summary: Delete user and all related data
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User deleted successfully
+
+  /admin/users/{id}/toggle-status:
+    patch:
+      tags: [Admin]
+      summary: Activate or deactivate a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User status toggled
+
+  /admin/requests:
+    get:
+      tags: [Admin]
+      summary: Get all blood requests
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: All blood requests
+
+  /admin/donations:
+    get:
+      tags: [Admin]
+      summary: Get all donations
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: All donations

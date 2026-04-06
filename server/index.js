@@ -57,6 +57,14 @@ app.use('/api/notifications', notificationRoutes);
 const adminRoutes = require ('./routes/admin.routes')
 app.use('/api/admin', adminRoutes);
 
+
+///SWAGGER 
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const swaggerDocument = YAML.load('./docs/swagger.yaml');
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 //Health Check
 app.get('/', (req, res) => {
   res.json({ message: 'DonateLife API is running', status: 'OK' });
