@@ -10,8 +10,9 @@ const { initSocket } = require('./config/socket');
 // Load env variables first before anything else
 dotenv.config();
 
-// Connect to database
-connectDB();
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
+}
 
 const app = express();
 
@@ -85,7 +86,13 @@ app.use((err, req, res, next) => {
 const server = http.createServer(app); // wrap express — required for Socket.io
 initSocket(server);                    // initialise Socket.io
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
+// ─── Server ───────────────────────────────────────────────────────────────
+if (process.env.NODE_ENV !== 'test') {
+  const PORT = process.env.PORT || 5000;
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
