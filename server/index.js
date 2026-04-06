@@ -50,7 +50,9 @@ app.use('/api/requests', requestRoutes);
 
 const donationRoutes = require('./routes/donation.routes')
 app.use('/api/donations', donationRoutes);
-// app.use('/api/notifications', notificationRoutes);
+
+const notificationRoutes = require('./routes/notification.routes')
+app.use('/api/notifications', notificationRoutes);
 // app.use('/api/admin', adminRoutes);
 
 //Health Check
