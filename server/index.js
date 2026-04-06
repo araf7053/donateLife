@@ -47,7 +47,9 @@ app.use('/api/donors', donorRoutes);
 
 const requestRoutes = require('./routes/request.routes');
 app.use('/api/requests', requestRoutes);
-// app.use('/api/donations', donationRoutes);
+
+const donationRoutes = require('./routes/donation.routes')
+app.use('/api/donations', donationRoutes);
 // app.use('/api/notifications', notificationRoutes);
 // app.use('/api/admin', adminRoutes);
 
