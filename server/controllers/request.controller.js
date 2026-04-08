@@ -6,10 +6,10 @@ const { getIO } = require('../config/socket');
 // CREATE BLOOD REQUEST
 exports.createRequest = async (req, res) => {
   try {
-    const { patient_name, blood_group, units_needed, city, hospital, urgency } = req.body;
+    const { patient_name, blood_group, units_needed, city, hospital, urgency, contact_no } = req.body;
 
-    if (!patient_name || !blood_group || !units_needed || !city) {
-      return res.status(400).json({ message: 'patient_name, blood_group, units_needed and city are required' });
+    if (!patient_name || !blood_group || !units_needed || !city || !contact_no) {
+      return res.status(400).json({ message: 'patient_name, blood_group, units_needed, city and contact_no are required' });
     }
 
     const request = await BloodRequest.create({
@@ -18,6 +18,7 @@ exports.createRequest = async (req, res) => {
       blood_group,
       units_needed,
       location: { city, hospital },
+      contact_no,
       urgency: urgency || 'Normal'
     });
 

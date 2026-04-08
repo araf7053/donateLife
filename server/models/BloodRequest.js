@@ -8,10 +8,10 @@ const BloodRequestSchema = new mongoose.Schema({
     location : {
         city : { type : String , required: true },
         hospital : { type : String }
-       
     },
-     urgency : { type : String, enum : ['Normal', 'Critical'], defualt : 'Normal'},
-     status :  { type : String , enum : ['Pending', 'Fulfilled', 'Cancelled'], default : 'Pending'},
+    contact_no : { type: String, required: true, trim: true },
+    urgency : { type : String, enum : ['Normal', 'Critical'], defualt : 'Normal'},
+    status :  { type : String , enum : ['Pending', 'Fulfilled', 'Cancelled'], default : 'Pending'},
 },{
     timestamps:true });
 
