@@ -24,16 +24,29 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiter — max 100 requests per 15 minutes per IP
+// Rate limiter — max 1000 requests per 15 minutes per IP
+// (roughly 1-2 requests per second which is reasonable for modern SPAs)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: { message: 'Too many requests, please try again later' }
+  max: 1000,
+  message: { message: 'Too many requests, please try again later' },
+  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
+  legacyHeaders: false, // Disable `X-RateLimit-*` headers
+  skip: (req) => {
+    // Skip rate limiting for health check
+    if (req.path === '/health') return true;
+    return false;
+  }
 });
 app.use('/api', limiter);
 
 // Body Parser
 app.use(express.json());
+
+// Health check endpoint (no rate limit)
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // ROUTES
 const authRoutes = require('./routes/auth.routes');

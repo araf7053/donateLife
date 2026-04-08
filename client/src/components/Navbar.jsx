@@ -25,8 +25,20 @@ const Navbar = () => {
         setUnreadCount(res.data.unreadCount);
       }
     } catch (err) {
-      // Silently fail - don't spam console
-      if (err.response?.status !== 401) {
+      // Handle rate limit gracefully - don't spam errors
+      if (err.response?.status === 429) {
+        // Silently fail on rate limit - will retry on next interval
+        console.warn('Rate limited on notifications fetch, will retry later');
+        return;
+      }
+
+      // Handle 401 (handled by axios interceptor, but log it)
+      if (err.response?.status === 401) {
+        return;
+      }
+
+      // Log other errors but don't spam
+      if (err.response?.status !== 401 && err.response?.status !== 429) {
         console.error('Failed to fetch unread count:', err.message);
       }
     }
