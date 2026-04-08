@@ -28,16 +28,28 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       const [statsRes, usersRes, requestsRes, donationsRes] = await Promise.all([
-        API.get('/admin/stats').catch(() => ({ data: {} })),
-        API.get('/admin/users').catch(() => ({ data: {} })),
-        API.get('/requests').catch(() => ({ data: {} })),
-        API.get('/donations').catch(() => ({ data: {} }))
+        API.get('/admin/stats').catch(err => {
+          console.warn('Stats fetch failed:', err.message);
+          return { data: {} };
+        }),
+        API.get('/admin/users').catch(err => {
+          console.warn('Users fetch failed:', err.message);
+          return { data: { users: [] } };
+        }),
+        API.get('/requests').catch(err => {
+          console.warn('Requests fetch failed:', err.message);
+          return { data: { requests: [] } };
+        }),
+        API.get('/donations').catch(err => {
+          console.warn('Donations fetch failed:', err.message);
+          return { data: { donations: [] } };
+        })
       ]);
 
-      const users = usersRes.data.users || [];
-      const requests = requestsRes.data.requests || [];
-      const donations = donationsRes.data.donations || [];
-      const dashStats = statsRes.data.stats || {};
+      const users = usersRes?.data?.users || [];
+      const requests = requestsRes?.data?.requests || [];
+      const donations = donationsRes?.data?.donations || [];
+      const dashStats = statsRes?.data?.stats || {};
 
       setStats({
         totalUsers: dashStats.totalUsers || users.length,
@@ -52,7 +64,7 @@ const AdminDashboard = () => {
         recentRequests: requests.slice(0, 5)
       });
     } catch (err) {
-      console.error(err);
+      console.error('Admin dashboard fetch error:', err.message);
       setError('Failed to load admin stats');
     } finally {
       setLoading(false);

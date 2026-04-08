@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API from '../api/axios';
@@ -9,19 +9,35 @@ const Navbar = () => {
   const location = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const lastFetchTime = useRef(0);
+
+  const fetchUnreadCount = useCallback(async () => {
+    // Prevent excessive API calls - only fetch once every 5 seconds
+    const now = Date.now();
+    if (now - lastFetchTime.current < 5000) {
+      return;
+    }
+    lastFetchTime.current = now;
+
+    try {
+      if (user?.token) {
+        const res = await API.get('/notifications/unread-count');
+        setUnreadCount(res.data.unreadCount);
+      }
+    } catch (err) {
+      // Silently fail - don't spam console
+      if (err.response?.status !== 401) {
+        console.error('Failed to fetch unread count:', err.message);
+      }
+    }
+  }, [user?.token]);
 
   useEffect(() => {
-    fetchUnreadCount();
-  }, [location]);
-
-  const fetchUnreadCount = async () => {
-    try {
-      const res = await API.get('/notifications/unread-count');
-      setUnreadCount(res.data.unreadCount);
-    } catch (err) {
-      console.error(err);
+    // Only fetch when user is authenticated
+    if (user) {
+      fetchUnreadCount();
     }
-  };
+  }, [user, fetchUnreadCount]);
 
   const donorLinks = [
     { label: 'Dashboard', path: '/donor' },

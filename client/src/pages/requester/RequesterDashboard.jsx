@@ -17,13 +17,20 @@ const RequesterDashboard = () => {
   const fetchData = async () => {
     try {
       const [requestsRes, notifRes] = await Promise.all([
-        API.get('/requests/my').catch(() => null),
-        API.get('/notifications').catch(() => null),
+        API.get('/requests/my').catch(err => {
+          console.warn('Requests fetch failed:', err.message);
+          return { data: { requests: [] } };
+        }),
+        API.get('/notifications').catch(err => {
+          console.warn('Notifications fetch failed:', err.message);
+          return { data: { notifications: [] } };
+        }),
       ]);
-      if (requestsRes) setRequests(requestsRes.data.requests || []);
-      if (notifRes) setNotifications(notifRes.data.notifications || []);
+      if (requestsRes?.data) setRequests(requestsRes.data.requests || []);
+      if (notifRes?.data) setNotifications(notifRes.data.notifications || []);
     } catch (err) {
-      console.error(err);
+      console.error('Dashboard fetch error:', err.message);
+      // Continue loading even if fetch fails
     } finally {
       setLoading(false);
     }

@@ -19,18 +19,31 @@ const DonorDashboard = () => {
   const fetchData = async () => {
     try {
       const [profileRes, eligibilityRes, notifRes, donationRes] = await Promise.all([
-        API.get('/donors/profile').catch(() => null),
-        API.get('/donors/eligibility').catch(() => null),
-        API.get('/notifications'),
-        API.get('/donations/my').catch(() => null)
+        API.get('/donors/profile').catch(err => {
+          console.warn('Profile fetch failed:', err.message);
+          return null;
+        }),
+        API.get('/donors/eligibility').catch(err => {
+          console.warn('Eligibility fetch failed:', err.message);
+          return null;
+        }),
+        API.get('/notifications').catch(err => {
+          console.warn('Notifications fetch failed:', err.message);
+          return { data: { notifications: [] } };
+        }),
+        API.get('/donations/my').catch(err => {
+          console.warn('Donations fetch failed:', err.message);
+          return null;
+        })
       ]);
 
-      if (profileRes) setProfile(profileRes.data.profile);
-      if (eligibilityRes) setEligibility(eligibilityRes.data);
-      if (notifRes) setNotifications(notifRes.data.notifications);
-      if (donationRes) setDonations(donationRes.data.donations);
+      if (profileRes?.data) setProfile(profileRes.data.profile);
+      if (eligibilityRes?.data) setEligibility(eligibilityRes.data);
+      if (notifRes?.data) setNotifications(notifRes.data.notifications || []);
+      if (donationRes?.data) setDonations(donationRes.data.donations || []);
     } catch (err) {
-      console.error(err);
+      console.error('Dashboard fetch error:', err.message);
+      // Continue loading even if fetch fails
     } finally {
       setLoading(false);
     }
