@@ -197,13 +197,13 @@ const DonorDashboard = () => {
             </div>
           </Link>
           <Link
-            to="/donor/search"
+            to="/donor/requests"
             className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition"
           >
-            <div className="text-3xl">🔍</div>
+            <div className="text-3xl">📋</div>
             <div>
-              <div className="font-medium text-gray-800">Search Donors</div>
-              <div className="text-sm text-gray-500">Find nearby eligible donors</div>
+              <div className="font-medium text-gray-800">View Requests</div>
+              <div className="text-sm text-gray-500">See blood requests needing your type</div>
             </div>
           </Link>
         </div>

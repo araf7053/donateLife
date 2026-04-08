@@ -8,12 +8,14 @@ import Register from './pages/auth/Register';
 // Donor pages
 import DonorDashboard from './pages/donor/DonorDashboard';
 import DonorProfile from './pages/donor/DonorProfile';
-import SearchDonors from './pages/donor/SearchDonors';
+import MyDonations from './pages/donor/MyDonations';
+import AvailableRequests from './pages/donor/AvailableRequests';
 
 // Requester pages
 import RequesterDashboard from './pages/requester/RequesterDashboard';
 import CreateRequest from './pages/requester/CreateRequest';
 import MyRequests from './pages/requester/MyRequests';
+import SearchDonors from './pages/requester/SearchDonors';
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -50,9 +52,14 @@ const AppRoutes = () => {
           <DonorProfile />
         </ProtectedRoute>
       } />
-      <Route path="/donor/search" element={
+      <Route path="/donor/donations" element={
         <ProtectedRoute allowedRoles={['donor']}>
-          <SearchDonors />
+          <MyDonations />
+        </ProtectedRoute>
+      } />
+      <Route path="/donor/requests" element={
+        <ProtectedRoute allowedRoles={['donor']}>
+          <AvailableRequests />
         </ProtectedRoute>
       } />
 
@@ -70,6 +77,11 @@ const AppRoutes = () => {
       <Route path="/requester/requests" element={
         <ProtectedRoute allowedRoles={['requester']}>
           <MyRequests />
+        </ProtectedRoute>
+      } />
+      <Route path="/requester/donors" element={
+        <ProtectedRoute allowedRoles={['requester']}>
+          <SearchDonors />
         </ProtectedRoute>
       } />
 

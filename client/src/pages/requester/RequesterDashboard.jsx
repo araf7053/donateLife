@@ -92,7 +92,7 @@ const RequesterDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Link
             to="/requester/create"
             className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition border-l-4"
@@ -113,6 +113,17 @@ const RequesterDashboard = () => {
             <div>
               <div className="font-medium text-gray-800">My Requests</div>
               <div className="text-sm text-gray-500">View and manage all your requests</div>
+            </div>
+          </Link>
+          <Link
+            to="/requester/donors"
+            className="bg-white rounded-xl shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition border-l-4"
+            style={{ borderLeftColor: '#7f0000' }}
+          >
+            <div className="text-3xl">🔍</div>
+            <div>
+              <div className="font-medium text-gray-800">Find Donors</div>
+              <div className="text-sm text-gray-500">Search for eligible blood donors</div>
             </div>
           </Link>
         </div>

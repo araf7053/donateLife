@@ -26,13 +26,15 @@ const Navbar = () => {
   const donorLinks = [
     { label: 'Dashboard', path: '/donor' },
     { label: 'My Profile', path: '/donor/profile' },
-    { label: 'Search Donors', path: '/donor/search' },
+    { label: 'Available Requests', path: '/donor/requests' },
+    { label: 'My Donations', path: '/donor/donations' },
   ];
 
   const requesterLinks = [
     { label: 'Dashboard', path: '/requester' },
     { label: 'Create Request', path: '/requester/create' },
     { label: 'My Requests', path: '/requester/requests' },
+    { label: 'Find Donors', path: '/requester/donors' },
   ];
 
   const adminLinks = [
