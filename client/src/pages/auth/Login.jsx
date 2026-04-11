@@ -21,6 +21,12 @@ const Login = () => {
     try {
       const res = await API.post('/auth/login', formData);
       login(res.data.token, res.data.user);
+      try {
+        const profileRes = await API.get('/auth/me');
+        login(res.data.token, profileRes.data.user);
+      } catch (profileErr) {
+        console.warn('Failed to refresh user after login:', profileErr.message || profileErr);
+      }
       navigate(`/${res.data.user.role}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');

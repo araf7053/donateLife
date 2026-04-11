@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const DonorProfile = require("../models/DonorProfile");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -112,7 +113,18 @@ exports.loginUser = async (req, res) => {
 // GET CURRENT USER
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password_hash');
+    const user = await User.findById(req.user.id).select('-password_hash').lean();
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.role === 'donor') {
+      const profile = await DonorProfile.findOne({ user_id: user._id });
+      if (profile) {
+        user.donor_profile = profile;
+      }
+    }
+
     res.status(200).json({ user });
   } catch (error) {
     console.error('GetMe error:', error);

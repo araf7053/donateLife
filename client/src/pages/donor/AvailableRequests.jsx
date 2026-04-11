@@ -6,11 +6,14 @@ import { useAuth } from '../../context/AuthContext';
 const AvailableRequests = () => {
   const { user } = useAuth();
   const [requests, setRequests] = useState([]);
+  const [donorProfile, setDonorProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
   const [donatingTo, setDonatingTo] = useState(null);
   const [donateLoading, setDonateLoading] = useState(false);
+
+  const bloodGroupLabel = donorProfile?.blood_group || user?.donor_profile?.blood_group || 'Unknown';
 
   useEffect(() => {
     fetchRequests();
@@ -18,10 +21,16 @@ const AvailableRequests = () => {
 
   const fetchRequests = async () => {
     try {
+      let profile = user?.donor_profile;
+      if (!profile && user?.role === 'donor') {
+        const profileRes = await API.get('/donors/profile').catch(() => null);
+        profile = profileRes?.data?.profile || null;
+      }
+      setDonorProfile(profile);
+
       const response = await API.get('/requests?status=Pending');
-      // Filter to only show requests with the donor's blood group
       const matchingRequests = (response.data.requests || []).filter(
-        req => req.blood_group === user?.donor_profile?.blood_group
+        req => req.blood_group === profile?.blood_group
       );
       setRequests(matchingRequests);
     } catch (err) {
@@ -77,9 +86,14 @@ const AvailableRequests = () => {
           <h1 className="text-3xl font-bold text-gray-800">🩸 Available Requests</h1>
           <p className="text-gray-500 text-sm mt-1">
             Blood requests matching your blood type: <span className="font-bold" style={{ color: '#7f0000' }}>
-              {user?.donor_profile?.blood_group || 'Unknown'}
+              {bloodGroupLabel}
             </span>
           </p>
+          {!donorProfile && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4 text-sm text-yellow-700">
+              ⚠️ Complete your donor profile to see matching requests on this page.
+            </div>
+          )}
         </div>
 
         {error && (

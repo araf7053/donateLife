@@ -26,6 +26,12 @@ const Register = () => {
     try {
       const res = await API.post('/auth/register', formData);
       login(res.data.token, res.data.user);
+      try {
+        const profileRes = await API.get('/auth/me');
+        login(res.data.token, profileRes.data.user);
+      } catch (profileErr) {
+        console.warn('Failed to refresh user after register:', profileErr.message || profileErr);
+      }
       navigate(`/${res.data.user.role}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
